@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devcon 8 Emcee Board</title>
+<meta name="description" content="Devcon 8 MC schedule: who is on which stage, when, and for how long. Log in with Telegram for shift reminders.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: day tabs → stage-by-time timeline (stages as rows, 10am–6:30pm across) → emcee hours board beside a detail/notes column */
+:root{
+  --bg:#f5f5fa; --surface:#ffffff; --ink:#1c1a33; --muted:#5d5a78; --line:#dddbe9; --accent:#d9480f; --accent-soft:#fde8dd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
+  /* stage tints echo the colours of the printed MC sheet */
+  --s-main:#f3c9cf; --s-l1:#fbe0c8; --s-l2:#fbefc4; --s-l3:#d6ecd0; --s-j4:#cfdcf7; --s-lt:#e1d8f0; --s-w1:#f2d3df; --s-w2:#eed5e6; --s-ink:#1c1a33;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.panel,.side{min-width:0}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{margin:6px 0 0;color:var(--muted);max-width:62ch}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0}
+.eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.callout{background:var(--warn-soft);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:14px}
+.callout b{color:var(--warn)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.tab small{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:12px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab[aria-selected="true"] small{color:inherit;opacity:.75}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:0}
+.clear{font:inherit;font-size:13px;border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:4px}
+.timeline-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.timeline{min-width:860px;display:grid;grid-template-columns:118px 1fr;row-gap:6px}
+.axis{position:relative;height:22px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.axis span{position:absolute;transform:translateX(-50%);top:2px;font-variant-numeric:tabular-nums}
+.stage-label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;padding-right:8px}
+.swatch{width:10px;height:10px;border-radius:3px;flex:none}
+.lane{position:relative;height:74px;border-radius:8px;background:repeating-linear-gradient(90deg,transparent 0 calc(100%/8.5 - 1px),var(--line) calc(100%/8.5 - 1px) calc(100%/8.5))}
+.lane.empty::after{content:"No sessions listed";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-style:italic}
+.blk{position:absolute;top:3px;bottom:3px;border-radius:7px;border:0;padding:5px 7px;text-align:left;font:inherit;color:var(--s-ink);cursor:pointer;overflow:hidden;display:flex;flex-direction:column;gap:1px;transition:opacity .15s, box-shadow .15s}
+.blk .t{font-family:var(--mono);font-size:10.5px;opacity:.8;white-space:nowrap;font-variant-numeric:tabular-nums}
+.blk .e{font-weight:600;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk .k{font-size:11px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk.tbc .e{font-style:italic;opacity:.75}
+.blk.dim{opacity:.22}
+.blk.sel{box-shadow:0 0 0 2px var(--accent)}
+.blk .flag{position:absolute;top:4px;right:5px;width:16px;height:16px;border-radius:50%;background:var(--warn);color:var(--surface);font-size:11px;font-weight:700;display:grid;place-items:center}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+.tri{display:inline-block;width:16px;height:14px;vertical-align:-2px}
+.tri .b{fill:var(--clash)} .tri .m{stroke:var(--surface);stroke-width:1.7;stroke-linecap:round;fill:none}
+.blk .tri{position:absolute;top:4px;right:5px}
+.blk.clash{box-shadow:inset 0 0 0 2px var(--clash)}
+.blk.clash.sel{box-shadow:inset 0 0 0 2px var(--clash),0 0 0 2px var(--accent)}
+.legend i{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--warn);color:var(--surface);font-style:normal;font-weight:700;font-size:10px;margin-right:4px;vertical-align:-2px}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.board-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-bottom:6px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 14px;font-size:13px;color:var(--muted)}
+.stats b{font-family:var(--display);font-size:20px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;margin-right:4px}
+.rows{display:grid;gap:2px}
+.row{display:grid;grid-template-columns:22px minmax(0,1fr) 64px;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%}
+.row:hover{background:var(--bg)}
+.row.sel{background:var(--accent-soft)}
+.row .rank{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.row .who{display:grid;gap:3px;min-width:0}
+.row .name{font-weight:600;font-size:14px;display:flex;gap:6px;align-items:baseline;min-width:0}
+.row .name span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .name small{font-weight:400;color:var(--muted);font-size:12px;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.row .hrs{font-family:var(--mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+.row .hrs .tri{margin-left:4px}
+.row.unassigned .name span{font-style:italic;color:var(--muted)}
+.row.unassigned .bar i{background:var(--muted)}
+.side{display:grid;gap:22px}
+.detail h3{font-family:var(--display);font-size:22px;font-weight:600;margin:2px 0 4px}
+.detail .meta{color:var(--muted);font-size:13px;margin:0 0 12px}
+.slist{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.slist li{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 12px;border-radius:10px;background:var(--bg)}
+.slist .d{font-family:var(--mono);font-size:12px;color:var(--muted);grid-row:span 2;font-variant-numeric:tabular-nums;line-height:1.4}
+.slist .st{font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center}
+.slist .tr{font-size:13px;color:var(--muted)}
+.slist .fl.clash{color:var(--clash);background:var(--clash-soft)}
+.slist .fl{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px}
+.slist .talks{grid-column:1/-1;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
+.hint{color:var(--muted);font-size:14px;margin:0}
+.notes ul{margin:8px 0 0;padding-left:18px;display:grid;gap:8px;font-size:14px}
+.notes li b{font-weight:600}
+.sig{border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.me{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.me p{margin:0;max-width:60ch}
+.me .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-size:14px;font-weight:600;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.linkish{font:inherit;font-size:13px;border:0;background:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px}
+.ok{color:var(--ink)} .ok b{color:var(--accent)}
+.msg{font-size:13px;color:var(--muted)}
+.msg.err{color:var(--clash)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Devcon 8 · 3–6 Nov 2026 · MC schedule</div>
+      <h1>Who's on the mic, <span>where</span>, for how long</h1>
+      <p class="sub">Every emcee slot from the MC sheet, laid out by stage and time. Tap a slot or a name to see that person's full schedule and total hours.</p>
+    </div>
+  </header>
+
+  <div class="callout"><b>Call time:</b> plan to arrive 30 minutes before each slot (a 10am slot means 9:30am). Exact session timings live in the Devcon Passport, and sessions can run over.</div>
+
+  <section class="panel me" id="me" aria-live="polite"><p class="msg">Loading…</p></section>
+
+  <section class="panel" aria-label="Schedule timeline">
+    <div class="toolbar">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="filters">
+        <label for="track" class="eyebrow">Track</label>
+        <select id="track"><option value="">All tracks</option></select>
+        <button class="clear" id="clear" hidden>Clear selection</button>
+      </div>
+    </div>
+    <div class="timeline-scroll"><div class="timeline" id="timeline"></div></div>
+    <div class="legend"><span><svg class="tri" viewBox="0 0 16 14" aria-hidden="true"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg> Double-booked: same emcee in two places at once</span><span><i>!</i>Needs checking (tap the slot to see why)</span><span><em>TBC</em> = no emcee named yet</span><span>Scroll sideways on a phone</span></div>
+  </section>
+
+  <div class="cols">
+    <section class="panel" aria-label="Emcee hours">
+      <div class="board-head">
+        <h2>Hours per emcee</h2>
+        <label class="toggle"><input type="checkbox" id="calltime"> Add 30 min call time per slot</label>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="rows" id="board"></div>
+    </section>
+
+    <div class="side">
+      <section class="panel detail" id="detail" aria-live="polite"></section>
+      <section class="panel notes">
+        <h2>Checks against the PDF</h2>
+        <ul>
+          <li><b>Clash on Day 4:</b> Alessandro Malventano is listed for Lotus Stage 1 and Workshop 2 at the same time (10am–1pm). Both slots are counted in his 8h, so his real total may be 5h.</li>
+          <li><b>Days 2–4 have no Main Stage slots.</b> The Main Stage column only appears on Day 1 (Opening Ceremony).</li>
+          <li><b>Day 3, Workshops 1 and 2:</b> the emcee names are printed in grey rather than black, which may mean they are not confirmed.</li>
+          <li><b>Unassigned:</b> all four Community Hubs slots on Day 1 (Jasmine Stage 4 and Workshop 2) still say TBC.</li>
+          <li>Hours use the slot times exactly as printed (for example 1pm–2:59pm counts as 1h 59m).</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+  <footer class="sig">vibe build: miss purple · original source: ross</footer>
+</div>
+
+<script type="module">
+const SESSIONS = (await fetch("/api/schedule").then(r=>r.json())).sessions;
+const TRI = `<svg class="tri" viewBox="0 0 16 14" role="img" aria-label="double-booked"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg>`;
+// Placeholder for speakers/talks: once the Devcon Passport is live, add a `talks` array to any session above,
+// e.g. {"title":"…","speaker":"…","start":"10:15","end":"10:35"}. They will show in the detail panel automatically.
+
+const DAYS = {1:{name:"Tue",date:"3 Nov"},2:{name:"Wed",date:"4 Nov"},3:{name:"Thu",date:"5 Nov"},4:{name:"Fri",date:"6 Nov"}};
+const STAGES = [
+  ["Main","Main Stage (Lotus)","--s-main"],["L1","Lotus Stage 1","--s-l1"],["L2","Lotus Stage 2","--s-l2"],["L3","Lotus Stage 3","--s-l3"],
+  ["J4","Jasmine Stage 4","--s-j4"],["LT","Lightning Stage","--s-lt"],["W1","Workshop 1","--s-w1"],["W2","Workshop 2","--s-w2"]];
+const STAGE = Object.fromEntries(STAGES.map(s=>[s[0],{name:s[1],color:s[2]}]));
+const T0 = 10*60, T1 = 18*60+30, SPAN = T1-T0;
+
+const mins = t => +t.slice(0,2)*60 + +t.slice(3);
+const dur = s => mins(s.end)-mins(s.start);
+const clock = t => { let h=+t.slice(0,2), m=t.slice(3); const ap=h>=12?"pm":"am"; h=h%12||12; return m==="00"?`${h}${ap}`:`${h}:${m}${ap}`; };
+const range = s => `${clock(s.start)}–${clock(s.end)}`;
+const fmtH = m => { const h=Math.floor(m/60), r=m%60; return r? `${h}h ${String(r).padStart(2,"0")}m` : `${h}h`; };
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+SESSIONS.forEach((s,i)=>{ s.id=i; s.trackList=s.tracks.split(",").map(t=>t.trim()).filter(Boolean); });
+
+let state = { day:1, emcee:null, sessionId:null, track:"", call:false };
+try { const d=+localStorage.getItem("dc8-day"); if(DAYS[d]) state.day=d; state.call = localStorage.getItem("dc8-call")==="1"; } catch(e){}
+
+// Track options: normalise the PDF's varied spellings into the official Devcon track names
+const TRACKS = [
+  ["Core Protocol",/core/i],["Applied Cryptography",/crypt/i],["Security",/secur/i],["Privacy & Consent",/privacy/i],
+  ["Rights, Freedom, Govt",/right|freedom|gov/i],["Users, Builders, Agents",/users|builders|agents/i],["Futures worth building",/futures/i],
+  ["Open & Verifiable Stack",/verifiable/i],["Permissionless",/permissionless/i],["Community-led (CLS / Hubs)",/cls|community/i]];
+const trackSel = document.getElementById("track");
+TRACKS.forEach(([n])=>trackSel.insertAdjacentHTML("beforeend",`<option value="${esc(n)}">${esc(n)}</option>`));
+const matchesTrack = s => !state.track || TRACKS.find(t=>t[0]===state.track)[1].test(s.tracks);
+
+function totals(){
+  const by = {};
+  SESSIONS.forEach(s=>{
+    const k=s.emcee; by[k] ??= {name:k, mins:0, n:0, days:new Set(), flagged:false};
+    by[k].mins += dur(s) + (state.call?30:0); by[k].n++; by[k].days.add(s.day); if(s.kind==='clash') by[k].flagged=true;
+  });
+  return Object.values(by);
+}
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = Object.entries(DAYS).map(([d,v])=>{
+    const n = SESSIONS.filter(s=>s.day==d).length;
+    return `<button class="tab" role="tab" id="tab-${d}" aria-selected="${state.day==d}" data-day="${d}">Day ${d} · ${v.name} <small>${v.date} · ${n} slots</small></button>`;
+  }).join("");
+}
+
+function renderTimeline(){
+  const el = document.getElementById("timeline");
+  let html = `<div></div><div class="axis">` + Array.from({length:9},(_,i)=>{
+    const m=T0+i*60; return `<span style="left:${(m-T0)/SPAN*100}%">${clock(String(Math.floor(m/60)).padStart(2,"0")+":00")}</span>`; }).join("") + `</div>`;
+  STAGES.forEach(([code,name,color])=>{
+    const list = SESSIONS.filter(s=>s.day===state.day && s.stage===code);
+    html += `<div class="stage-label"><span class="swatch" style="background:var(${color})"></span>${esc(name)}</div><div class="lane${list.length?"":" empty"}">`;
+    list.forEach(s=>{
+      const left=(mins(s.start)-T0)/SPAN*100, w=dur(s)/SPAN*100;
+      const dim = (state.emcee && s.emcee!==state.emcee) || !matchesTrack(s);
+      const sel = state.sessionId===s.id || (state.emcee && s.emcee===state.emcee && state.sessionId==null);
+      html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.kind==='clash'?" clash":""}${dim?" dim":""}${sel?" sel":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(${color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
+        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+  document.getElementById("clear").hidden = !(state.emcee || state.track);
+}
+
+function renderBoard(){
+  const all = totals();
+  const named = all.filter(r=>r.name!=="TBC").sort((a,b)=>b.mins-a.mins||a.name.localeCompare(b.name));
+  const tbc = all.find(r=>r.name==="TBC");
+  const max = named[0].mins;
+  const sum = named.reduce((a,r)=>a+r.mins,0);
+  document.getElementById("stats").innerHTML =
+    `<span><b>${named.length}</b>emcees</span><span><b>${SESSIONS.length}</b>slots</span><span><b>${fmtH(sum)}</b>named hours</span><span><b>${fmtH(Math.round(sum/named.length))}</b>average</span>`;
+  const row = (r,i,cls="") => `<button class="row ${cls}${state.emcee===r.name?" sel":""}" data-emcee="${esc(r.name)}">
+      <span class="rank">${i}</span>
+      <span class="who"><span class="name"><span>${r.name==="TBC"?"Unassigned (TBC)":esc(r.name)}</span><small>${r.n} slot${r.n>1?"s":""} · Day ${[...r.days].sort().join(", ")}</small></span>
+      <span class="bar"><i style="width:${Math.min(100,r.mins/max*100)}%"></i></span></span>
+      <span class="hrs">${fmtH(r.mins)}${r.flagged?TRI:""}</span></button>`;
+  document.getElementById("board").innerHTML = named.map((r,i)=>row(r,i+1)).join("") + (tbc? row(tbc,"–","unassigned"):"");
+}
+
+function renderDetail(){
+  const el = document.getElementById("detail");
+  if(!state.emcee){
+    el.innerHTML = `<div class="eyebrow">Emcee schedule</div><h3>Pick someone</h3><p class="hint">Tap a slot on the timeline or a name in the hours list to see every slot that person has across all four days, with call times.</p>`;
+    return;
+  }
+  const list = SESSIONS.filter(s=>s.emcee===state.emcee).sort((a,b)=>a.day-b.day||mins(a.start)-mins(b.start));
+  const total = list.reduce((a,s)=>a+dur(s),0);
+  const name = state.emcee==="TBC"?"Unassigned (TBC)":state.emcee;
+  el.innerHTML = `<div class="eyebrow">Emcee schedule</div><h3>${esc(name)}</h3>
+    <p class="meta">${list.length} slot${list.length>1?"s":""} · ${fmtH(total)} on stage · ${fmtH(total+list.length*30)} including call time</p>
+    <ul class="slist">${list.map(s=>{
+      const call = clock(String(Math.floor((mins(s.start)-30)/60)).padStart(2,"0")+":"+String((mins(s.start)-30)%60).padStart(2,"0"));
+      const talks = s.talks?.length ? s.talks.map(t=>`${esc(t.start?clock(t.start)+" ":"")}${esc(t.title)}${t.speaker?" — "+esc(t.speaker):""}`).join("<br>") : "Speakers and talks: not added yet";
+      return `<li><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
+        <span class="st"><span class="swatch" style="background:var(${STAGE[s.stage].color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
+        <span class="tr">${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
+        ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}">${esc(s.flag)}</span>`:""}
+        <span class="talks">${talks}</span></li>`;}).join("")}</ul>`;
+}
+
+function render(){ renderTabs(); renderTimeline(); renderBoard(); renderDetail(); }
+
+document.addEventListener("click",e=>{
+  const tab=e.target.closest(".tab"); if(tab){ state.day=+tab.dataset.day; state.sessionId=null; try{localStorage.setItem("dc8-day",state.day)}catch(_){} return render(); }
+  const blk=e.target.closest(".blk"); if(blk){ const s=SESSIONS[+blk.dataset.id]; state.emcee=s.emcee; state.sessionId=s.id; return render(); }
+  const row=e.target.closest(".row"); if(row){ const n=row.dataset.emcee; state.emcee = state.emcee===n?null:n; state.sessionId=null;
+    if(state.emcee && !SESSIONS.some(s=>s.emcee===n&&s.day===state.day)) state.day = SESSIONS.find(s=>s.emcee===n).day;
+    render(); if(state.emcee && window.innerWidth<860) document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"start"}); return; }
+  if(e.target.id==="clear"){ state.emcee=null; state.sessionId=null; state.track=""; trackSel.value=""; return render(); }
+});
+trackSel.addEventListener("change",()=>{ state.track=trackSel.value; renderTimeline(); });
+const callBox=document.getElementById("calltime"); callBox.checked=state.call;
+callBox.addEventListener("change",()=>{ state.call=callBox.checked; try{localStorage.setItem("dc8-call",state.call?"1":"0")}catch(_){} renderBoard(); });
+render();
+
+// ---------- Telegram login + reminders ----------
+const meEl = document.getElementById("me");
+let account = null;
+const api = (body) => fetch("/api/account", { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined, credentials: "same-origin" }).then(async r => ({ ok: r.ok, data: await r.json().catch(() => ({})) }));
+
+async function loadAccount(){
+  const r = await api();
+  account = r.data;
+  if (account.emcee && !state.emcee){
+    state.emcee = account.emcee; state.sessionId = null;
+    const first = SESSIONS.filter(s=>s.emcee===account.emcee).sort((a,b)=>a.day-b.day)[0];
+    if (first) state.day = first.day;
+    render();
+  }
+  renderMe();
+}
+
+function botLink(){ return account?.botUsername ? `https://t.me/${account.botUsername}` : "#"; }
+
+function renderMe(msg = "", isErr = false){
+  const note = msg ? `<span class="msg${isErr?" err":""}">${esc(msg)}</span>` : "";
+  if (!account?.user){
+    meEl.innerHTML = `<p><b>Are you an emcee?</b> Log in with Telegram and pick your name. The bot will send you your slots, then remind you 2 hours and 1 hour before each one.</p>
+      <div class="actions"><span id="tgw"></span><a class="linkish" href="${botLink()}" target="_blank" rel="noopener">Or open the bot directly</a>${note}</div>`;
+    if (account?.botUsername){
+      const s = document.createElement("script");
+      s.async = true; s.src = "https://telegram.org/js/telegram-widget.js?22";
+      s.setAttribute("data-telegram-login", account.botUsername);
+      s.setAttribute("data-size", "large");
+      s.setAttribute("data-request-access", "write");
+      s.setAttribute("data-onauth", "onTelegramAuth(user)");
+      document.getElementById("tgw").appendChild(s);
+    } else {
+      document.getElementById("tgw").innerHTML = `<span class="msg">Telegram login isn't set up yet.</span>`;
+    }
+    return;
+  }
+  const hi = esc(account.user.first_name || account.user.username || "there");
+  if (!account.emcee){
+    meEl.innerHTML = `<p>Hi ${hi}. Which emcee are you? Pick your name to turn on reminders.</p>
+      <div class="actions"><select id="pick" aria-label="Your name"><option value="">Choose your name…</option>${account.emcees.map(n=>`<option>${esc(n)}</option>`).join("")}</select>
+      <button class="btn primary" id="linkBtn" disabled>This is me</button>
+      <button class="linkish" data-act="logout">Log out</button>${note}</div>`;
+    const pick = document.getElementById("pick"), btn = document.getElementById("linkBtn");
+    pick.addEventListener("change", () => btn.disabled = !pick.value);
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const r = await api({ action: "link", emcee: pick.value });
+      if (!r.ok) return renderMe(r.data.error || "Something went wrong. Please try again.", true);
+      account.emcee = r.data.emcee;
+      state.emcee = account.emcee; state.sessionId = null; render();
+      renderMe(r.data.delivered ? "Done. Check Telegram for your list of slots." : "Saved. Open the bot and press Start so it can message you.", !r.data.delivered);
+    });
+    return;
+  }
+  meEl.innerHTML = `<p class="ok">Hi ${hi}. You're <b>${esc(account.emcee)}</b>. Reminders are on: the bot messages you 2 hours and 1 hour before each slot.</p>
+    <div class="actions"><a class="btn" href="${botLink()}" target="_blank" rel="noopener">Open the bot</a>
+    <button class="linkish" data-act="change">Not you? Change name</button>
+    <button class="linkish" data-act="unlink">Turn off reminders</button>
+    <button class="linkish" data-act="logout">Log out</button>${note}</div>`;
+}
+
+meEl.addEventListener("click", async (e) => {
+  const act = e.target.closest("[data-act]")?.dataset.act; if (!act) return;
+  if (act === "logout"){ await api({ action: "logout" }); account.user = null; account.emcee = null; return renderMe(); }
+  if (act === "change"){ account.emcee = null; return renderMe(); }
+  if (act === "unlink"){ const r = await api({ action: "unlink" }); account.emcee = null; renderMe(r.ok ? "Reminders are off." : "Couldn't turn reminders off. Try again.", !r.ok); }
+});
+
+window.onTelegramAuth = async (user) => {
+  const r = await fetch("/api/auth", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(user), credentials: "same-origin" });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) return renderMe(data.error || "Login failed. Please try again.", true);
+  await loadAccount();
+};
+
+loadAccount().catch(() => renderMe("Couldn't reach the server, so login is unavailable right now.", true));
+</script>
+</body>
+</html>

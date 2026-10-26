@@ -1,0 +1,12 @@
+{
+  "name": "devcon8-emcee-board",
+  "private": true,
+  "type": "module",
+  "description": "Devcon 8 MC schedule site with Telegram login and a reminder bot.",
+  "scripts": {
+    "test": "node test/run-tests.js"
+  },
+  "dependencies": {
+    "@upstash/redis": "1.34.3"
+  }
+}
