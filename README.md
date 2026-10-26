@@ -154,6 +154,10 @@ The bot can only message people who have pressed Start or logged in on the site 
 | `/test` | Preview what a reminder looks like |
 | `/change` | Pick a different name |
 | `/stop` | Turn reminders off |
+| `/lock` | Lock your name so it can't be changed by mistake (reminders stay on) |
+| `/unlock` | Unlock your name (asks you to confirm). Needed before `/change` or `/stop` |
+
+The website has the same lock: **🔒 Lock my name** in the logged-in panel, and **Unlock** (with an "are you sure?") while locked.
 
 ## Updating the schedule or adding speakers
 
@@ -201,7 +205,7 @@ Or send the Passport details to Claude and ask for the file to be updated.
 - **Clashes:** Alessandro's two Day 4 morning slots are both on the sheet, so his reminders include a warning about the clash.
 - **What's stored:** each person's Telegram ID, first name, username and chosen emcee name, in your Upstash database. Nothing else.
 - **Vercel's free plan** is meant for personal, non-commercial projects. If this runs on behalf of an organisation, check Vercel's terms or use Pro.
-- **Checks:** `npm test` runs 22 automated checks (login security, every bot command, and reminders across the whole event) using fake Telegram and storage. You don't need to run them to deploy.
+- **Checks:** `npm test` runs 25 automated checks (login security, every bot command, and reminders across the whole event) using fake Telegram and storage. You don't need to run them to deploy.
 
 ---
 

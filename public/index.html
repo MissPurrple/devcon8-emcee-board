@@ -302,7 +302,7 @@ render();
 // ---------- Telegram login + reminders ----------
 const meEl = document.getElementById("me");
 let account = null;
-const api = (body) => fetch("/api/account", { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined, credentials: "same-origin" }).then(async r => ({ ok: r.ok, data: await r.json().catch(() => ({})) }));
+const api = (body) => fetch("/api/account", { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined, credentials: "same-origin" }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
 
 async function loadAccount(){
   const r = await api();
@@ -354,18 +354,29 @@ function renderMe(msg = "", isErr = false){
     });
     return;
   }
+  const nameActions = account.locked
+    ? `<span class="msg">🔒 Name locked</span>
+    <button class="linkish" data-act="unlock">Unlock</button>`
+    : `<button class="btn" data-act="lock">🔒 Lock my name</button>
+    <button class="linkish" data-act="change">Not you? Change name</button>
+    <button class="linkish" data-act="unlink">Turn off reminders</button>`;
   meEl.innerHTML = `<p class="ok">Hi ${hi}. You're <b>${esc(account.emcee)}</b>. Reminders are on: the bot messages you 2 hours and 1 hour before each slot.</p>
     <div class="actions"><a class="btn" href="${botLink()}" target="_blank" rel="noopener">Open the bot</a>
-    <button class="linkish" data-act="change">Not you? Change name</button>
-    <button class="linkish" data-act="unlink">Turn off reminders</button>
+    ${nameActions}
     <button class="linkish" data-act="logout">Log out</button>${note}</div>`;
 }
 
 meEl.addEventListener("click", async (e) => {
   const act = e.target.closest("[data-act]")?.dataset.act; if (!act) return;
-  if (act === "logout"){ await api({ action: "logout" }); account.user = null; account.emcee = null; return renderMe(); }
+  if (act === "logout"){ await api({ action: "logout" }); account.user = null; account.emcee = null; account.locked = false; return renderMe(); }
   if (act === "change"){ account.emcee = null; return renderMe(); }
-  if (act === "unlink"){ const r = await api({ action: "unlink" }); account.emcee = null; renderMe(r.ok ? "Reminders are off." : "Couldn't turn reminders off. Try again.", !r.ok); }
+  if (act === "lock"){ const r = await api({ action: "lock" }); if (r.ok) account.locked = true; return renderMe(r.ok ? "Locked. Your name can't be changed by mistake." : (r.data.error || "Couldn't lock. Try again."), !r.ok); }
+  if (act === "unlock"){
+    if (!confirm(`Unlock ${account.emcee}? You'll be able to change your name or turn off reminders again.`)) return;
+    const r = await api({ action: "unlock" }); if (r.ok) account.locked = false;
+    return renderMe(r.ok ? "Unlocked." : (r.data.error || "Couldn't unlock. Try again."), !r.ok);
+  }
+  if (act === "unlink"){ const r = await api({ action: "unlink" }); if (r.ok) account.emcee = null; else if (r.status === 409) account.locked = true; renderMe(r.ok ? "Reminders are off." : (r.data.error || "Couldn't turn reminders off. Try again."), !r.ok); }
 });
 
 window.onTelegramAuth = async (user) => {

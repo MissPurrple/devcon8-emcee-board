@@ -9,7 +9,7 @@ process.env.TELEGRAM_BOT_TOKEN = "123456:TEST-TOKEN";
 process.env.TELEGRAM_BOT_USERNAME = "devcon8_mc_bot";
 process.env.SITE_URL = "https://example.vercel.app";
 
-const { useStoreForTests } = await import("../lib/store.js");
+const { useStoreForTests, getEmcee } = await import("../lib/store.js");
 const { useTelegramForTests } = await import("../lib/telegram.js");
 const sched = await import("../lib/schedule.js");
 const { runReminders, activate } = await import("../lib/reminders.js");
@@ -116,7 +116,8 @@ await test("/start shows a button for every emcee", async () => {
 await test("tapping a name links it and sends the full list of slots", async () => {
   await telegramHook(hookReq({ callback_query: { id: "q1", from: { id: 7 }, data: "p:Miss Purple", message: { chat: { id: 7 }, message_id: 5 } } }), mockRes());
   assert.ok(calls.some((c) => c.method === "answerCallbackQuery"));
-  const text = sent(7).at(-1).params.text;
+  const text = sent(7).at(-2).params.text;
+  assert.match(sent(7).at(-1).params.text, /You can lock it/, "lock offer follows the list");
   assert.match(text, /You're set, Miss Purple/);
   assert.match(text, /Lotus Stage 1/); assert.match(text, /Jasmine Stage 4/);
   assert.match(text, /Privacy &amp; Consent/, "& is escaped for Telegram");
@@ -235,6 +236,63 @@ await test("/change to another name: reminders follow the new name", async () =>
   await simulateEvent(null, IST(2, "06:00"), IST(2, "20:00"));
   const texts = sent(209).map((m) => m.params.text);
   assert.equal(texts.length, 2); assert.ok(texts.every((t) => /Lotus Stage 3/.test(t)));
+});
+
+// ---- name lock -----------------------------------------------------------
+const tap = (id, data) => ({ callback_query: { id: `q-${id}-${data}`, from: { id }, data } });
+const answers = () => calls.filter((c) => c.method === "answerCallbackQuery").map((c) => c.params);
+await test("lock: after locking, /change, /stop and other names are refused until unlock is confirmed", async () => {
+  await telegramHook(hookReq(tap(400, "p:Miss Purple")), mockRes());
+  assert.equal(sent(400).at(-1).params.reply_markup.inline_keyboard[0][0].callback_data, "lock", "lock is offered after picking");
+  await telegramHook(hookReq(tap(400, "lock")), mockRes());
+  assert.match(sent(400).at(-1).params.text, /Locked/);
+
+  calls = [];
+  for (const c of ["/change", "/stop"]) await telegramHook(hookReq(msg(400, c)), mockRes());
+  assert.ok(sent(400).every((m) => /locked as <b>Miss Purple/.test(m.params.text) && !m.params.reply_markup));
+  await telegramHook(hookReq(tap(400, "p:Ross")), mockRes());
+  assert.ok(answers().at(-1).show_alert);
+  assert.equal(await getEmcee(400), "Miss Purple", "name unchanged, reminders still on");
+  await telegramHook(hookReq(msg(400, "/myshifts")), mockRes());
+  assert.match(sent(400).at(-1).params.text, /Your name is locked/);
+
+  await telegramHook(hookReq(msg(400, "/unlock")), mockRes());
+  assert.equal(sent(400).at(-1).params.reply_markup.inline_keyboard[0][0].callback_data, "unlock", "unlock asks for confirmation");
+  await telegramHook(hookReq(msg(400, "/change")), mockRes());
+  assert.match(sent(400).at(-1).params.text, /locked as/, "still locked until confirmed");
+
+  await telegramHook(hookReq(tap(400, "unlock")), mockRes());
+  assert.match(sent(400).at(-1).params.text, /Unlocked/);
+  await telegramHook(hookReq(msg(400, "/change")), mockRes());
+  assert.equal(sent(400).at(-1).params.reply_markup.inline_keyboard.flat().length, 29, "name picker shown again");
+  await telegramHook(hookReq(tap(400, "p:Ross")), mockRes());
+  assert.equal(await getEmcee(400), "Ross");
+});
+await test("lock: a locked name still gets its reminders", async () => {
+  await activate(401, "Martin Hansen", IST(3, "08:00"));
+  await telegramHook(hookReq(msg(401, "/lock")), mockRes());
+  calls = [];
+  await runReminders(IST(3, "13:00"));
+  assert.match(sent(401)[0].params.text, /about 2 hours/);
+});
+await test("website: lock blocks changing name and turning off until unlocked", async () => {
+  const login = signedLogin({ id: 402, first_name: "Purple", auth_date: Math.floor(Date.now() / 1000) });
+  let r = mockRes(); await auth(req({ method: "POST", body: login }), r);
+  const cookie = r.headers["set-cookie"].split(";")[0];
+  const post = async (body) => { const x = mockRes(); await account(req({ method: "POST", headers: { cookie }, body }), x); return x; };
+
+  r = await post({ action: "lock" }); assert.equal(r.statusCode, 400, "can't lock before picking a name");
+  await post({ action: "link", emcee: "Miss Purple" });
+  r = await post({ action: "lock" }); assert.equal(r.body.locked, true);
+  r = mockRes(); await account(req({ headers: { cookie } }), r); assert.equal(r.body.locked, true);
+
+  r = await post({ action: "link", emcee: "Ross" }); assert.equal(r.statusCode, 409);
+  r = await post({ action: "unlink" }); assert.equal(r.statusCode, 409);
+  assert.equal(await getEmcee(402), "Miss Purple");
+
+  r = await post({ action: "unlock" }); assert.equal(r.body.locked, false);
+  r = await post({ action: "link", emcee: "Ross" }); assert.equal(r.statusCode, 200);
+  assert.equal(await getEmcee(402), "Ross");
 });
 
 // ---- timer endpoint security ----------------------------------------------

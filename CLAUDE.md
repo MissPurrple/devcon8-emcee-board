@@ -27,16 +27,16 @@ The owner (Miss Purple, an emcee and organiser at Devcon 8) is **new to coding a
 | `lib/schedule.js` | Time helpers. Venue time is Mumbai, IST = UTC+05:30. Day 1 = Tue 3 Nov 2026. |
 | `lib/messages.js` | Wording of every bot message. |
 | `lib/reminders.js` | Reminder timing. 2h reminder when 60 < minutes left ≤ 120; 1h when 0 < left ≤ 60. `activate()` pre-marks windows already open so late sign-ups aren't spammed. |
-| `lib/store.js` | Upstash Redis access. Accepts `KV_REST_API_URL/TOKEN` or `UPSTASH_REDIS_REST_URL/TOKEN`. |
+| `lib/store.js` | Upstash Redis access. Accepts `KV_REST_API_URL/TOKEN` or `UPSTASH_REDIS_REST_URL/TOKEN`. Also the name lock (`locked:<id>`): while locked, /change, /stop, other name buttons and the website's change/turn-off are refused; unlocking needs a confirmation tap. |
 | `lib/security.js` | Telegram login hash check, webhook secret, admin key, login cookie. All derived from `ADMIN_SECRET`. |
 | `lib/telegram.js` | Bot API calls. |
 | `api/schedule.js` | GET schedule JSON for the site. |
 | `api/auth.js` | POST from the Telegram login button; verifies and sets cookie. |
-| `api/account.js` | GET who's logged in; POST link/unlink/logout. |
-| `api/telegram.js` | Bot webhook (commands: /start /myshifts /next /test /change /stop). |
+| `api/account.js` | GET who's logged in; POST link/unlink/lock/unlock/logout. |
+| `api/telegram.js` | Bot webhook (commands: /start /myshifts /next /test /change /stop /lock /unlock). |
 | `api/cron.js` | Sends due reminders. Needs `?key=ADMIN_SECRET` or `Authorization: Bearer <ADMIN_SECRET or CRON_SECRET>`. |
 | `api/setup.js` | Admin page: checks settings, connects the bot webhook, sets bot commands. `?key=ADMIN_SECRET`. Safe to rerun. |
-| `test/run-tests.js` | 22 checks with fake Telegram + storage. `npm test`. |
+| `test/run-tests.js` | 25 checks with fake Telegram + storage. `npm test`. |
 | `README.md` | The same setup as a manual, click-by-click guide (no Claude Code). |
 
 ### Settings (Vercel environment variables, Production)
@@ -53,7 +53,7 @@ The owner (Miss Purple, an emcee and organiser at Devcon 8) is **new to coding a
 ## Rules (always)
 
 1. **Secrets never appear in your chat output, in commits, or in files outside `.secrets/`.** Keep them in `.secrets/` (gitignored and vercelignored). Give them to Vercel by redirect: `vercel env add NAME production < .secrets/file.txt`. Inside a local command it's fine to read one with `$(cat .secrets/…)`, but never run anything whose output would print the value (no bare `cat`/`echo` of a secret, no printing a URL that contains it). When the owner needs a secret, tell them which file to open.
-2. **Run `npm test` before every deploy.** It must print `22 checks passed.` If it doesn't, stop and fix or explain.
+2. **Run `npm test` before every deploy.** It must print `25 checks passed.` If it doesn't, stop and fix or explain.
 3. **Never change or reuse an `id` in `lib/sessions-data.js`.** Sent reminders are remembered by id. New slots get the next unused number.
 4. Times in the data are 24-hour, 5 characters (`09:30`), Mumbai local time. `stage` codes: `Main L1 L2 L3 J4 LT W1 W2`. Emcee names must be spelled identically across their slots.
 5. Keep the footer signature on the site: `vibe build: miss purple · original source: ross`.
@@ -69,7 +69,7 @@ Use the task list to track these. Tell the owner at the start which steps are th
 ### 0. Check the tools
 - `node -v` (needs 18+). If missing, explain how to install Node.js LTS from nodejs.org and wait.
 - `npm install`
-- `npm test` → `22 checks passed.`
+- `npm test` → `25 checks passed.`
 - `npx vercel --version` (use `npx vercel` everywhere if `vercel` isn't installed globally; offer `npm i -g vercel`).
 - Make sure `.gitignore` and `.vercelignore` both list `.secrets`. Create `.secrets/` if missing.
 

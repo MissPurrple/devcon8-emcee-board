@@ -53,6 +53,8 @@ export default async function handler(req, res) {
           { command: "next", description: "Your next slot" },
           { command: "test", description: "Preview what a reminder looks like" },
           { command: "change", description: "Pick a different name" },
+          { command: "lock", description: "Lock your name so it can't be changed by mistake" },
+          { command: "unlock", description: "Unlock your name" },
           { command: "stop", description: "Turn off reminders" },
         ],
       });
