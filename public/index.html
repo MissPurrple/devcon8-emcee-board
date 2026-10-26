@@ -16,18 +16,19 @@ img{max-width:100%}
 :root{
   /* colours follow devcon.org: lavender page, deep purple-navy text, Devcon purple buttons */
   --bg:#ecf1ff; --surface:#ffffff; --ink:#170b2d; --muted:#574f73; --line:#d8dcf3; --accent:#7234ed; --on-accent:#ffffff; --accent-soft:#ece3fd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
-  /* stage tints are soft versions of the Devcon 8 track badge colours */
-  --s-main:#ecd3f5; --s-l1:#ffdcbf; --s-l2:#f3e2c9; --s-l3:#c4f3e7; --s-j4:#d1dfef; --s-lt:#ddd6f2; --s-w1:#ffd5e1; --s-w2:#d5d9f8; --s-ink:#170b2d;
+  /* slot cards are coloured by track, using the Devcon 8 track badge colours: --t-* card fills, --d-* dots for extra tracks */
+  --t-core:#ecd3f5; --t-crypt:#d1dfef; --t-sec:#f3e2c9; --t-priv:#e4e2ec; --t-rights:#dad1f2; --t-users:#ffd5e1; --t-futures:#ffdcbf; --t-open:#c4f3e7; --t-perm:#d5d9f8; --t-comm:var(--surface); --s-ink:#170b2d;
+  --d-core:#a64fc4; --d-crypt:#3f72a6; --d-sec:#b5824a; --d-priv:#8f8aa3; --d-rights:#5d4b99; --d-users:#ec6f93; --d-futures:#f7861b; --d-open:#16b896; --d-perm:#4650c9; --d-comm:var(--line);
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}}
+  --t-core:#5b2d6c; --t-crypt:#28456a; --t-sec:#5e4a2a; --t-priv:#3e3b54; --t-rights:#43376e; --t-users:#6c2f48; --t-futures:#6e3e1a; --t-open:#1d5a4f; --t-perm:#30357c; --s-ink:#f4f2ff; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}
+  --t-core:#5b2d6c; --t-crypt:#28456a; --t-sec:#5e4a2a; --t-priv:#3e3b54; --t-rights:#43376e; --t-users:#6c2f48; --t-futures:#6e3e1a; --t-open:#1d5a4f; --t-perm:#30357c; --s-ink:#f4f2ff; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
 .wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 .panel,.side{min-width:0}
@@ -64,6 +65,14 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .blk .k{font-size:11px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .blk.tbc .e{font-style:italic;opacity:.75}
 .blk.dim{opacity:.22}
+.blk.comm{box-shadow:inset 0 0 0 1px var(--line)}
+.blk .dots{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+.blk.marked .dots{right:27px}
+.dots i,.tkey i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 1px var(--s-ink)}
+.tkey{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.tkey span{display:inline-flex;align-items:center;gap:6px}
+.tkey .card{width:22px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line)}
+.tkey .dots{display:inline-flex;gap:3px}
 .blk.sel{box-shadow:0 0 0 2px var(--accent)}
 .blk .flag{position:absolute;top:4px;right:5px;width:16px;height:16px;border-radius:50%;background:var(--warn);color:var(--surface);font-size:11px;font-weight:700;display:grid;place-items:center}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
@@ -149,6 +158,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
     </div>
     <div class="timeline-scroll"><div class="timeline" id="timeline"></div></div>
     <div class="legend"><span><svg class="tri" viewBox="0 0 16 14" aria-hidden="true"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg> Double-booked: same emcee in two places at once</span><span><i>!</i>Needs checking (tap the slot to see why)</span><span><em>TBC</em> = no emcee named yet</span><span>Scroll sideways on a phone</span></div>
+    <div class="tkey" id="tkey"></div>
   </section>
 
   <div class="cols">
@@ -186,9 +196,9 @@ const TRI = `<svg class="tri" viewBox="0 0 16 14" role="img" aria-label="double-
 
 const DAYS = {1:{name:"Tue",date:"3 Nov"},2:{name:"Wed",date:"4 Nov"},3:{name:"Thu",date:"5 Nov"},4:{name:"Fri",date:"6 Nov"}};
 const STAGES = [
-  ["Main","Main Stage (Lotus)","--s-main"],["L1","Lotus Stage 1","--s-l1"],["L2","Lotus Stage 2","--s-l2"],["L3","Lotus Stage 3","--s-l3"],
-  ["J4","Jasmine Stage 4","--s-j4"],["LT","Lightning Stage","--s-lt"],["W1","Workshop 1","--s-w1"],["W2","Workshop 2","--s-w2"]];
-const STAGE = Object.fromEntries(STAGES.map(s=>[s[0],{name:s[1],color:s[2]}]));
+  ["Main","Main Stage (Lotus)"],["L1","Lotus Stage 1"],["L2","Lotus Stage 2"],["L3","Lotus Stage 3"],
+  ["J4","Jasmine Stage 4"],["LT","Lightning Stage"],["W1","Workshop 1"],["W2","Workshop 2"]];
+const STAGE = Object.fromEntries(STAGES.map(s=>[s[0],{name:s[1]}]));
 const T0 = 10*60, T1 = 18*60+30, SPAN = T1-T0;
 
 const mins = t => +t.slice(0,2)*60 + +t.slice(3);
@@ -212,6 +222,18 @@ const trackSel = document.getElementById("track");
 TRACKS.forEach(([n])=>trackSel.insertAdjacentHTML("beforeend",`<option value="${esc(n)}">${esc(n)}</option>`));
 const matchesTrack = s => !state.track || TRACKS.find(t=>t[0]===state.track)[1].test(s.tracks);
 
+// Card colours follow the Devcon 8 track badges. A slot takes the colour of its first listed track;
+// any other tracks show as dots. Community-led / Hubs / ceremony slots have no badge and stay plain.
+const TRACK_COLOR = {"Core Protocol":"core","Applied Cryptography":"crypt","Security":"sec","Privacy & Consent":"priv","Rights, Freedom, Govt":"rights",
+  "Users, Builders, Agents":"users","Futures worth building":"futures","Open & Verifiable Stack":"open","Permissionless":"perm"};
+SESSIONS.forEach(s=>{
+  const keys = [...new Set(s.trackList.map(p=>TRACK_COLOR[TRACKS.find(t=>t[1].test(p))?.[0]]).filter(Boolean))];
+  s.color = keys[0] || "comm"; s.extra = keys.slice(1);
+});
+document.getElementById("tkey").innerHTML = `<span>Card colour = track:</span>` +
+  Object.entries(TRACK_COLOR).map(([n,k])=>`<span><b class="card" style="background:var(--t-${k})"></b>${esc(n)}</span>`).join("") +
+  `<span><b class="card" style="background:var(--t-comm)"></b>Community-led, Hubs, ceremony</span><span><span class="dots"><i style="background:var(--d-sec)"></i><i style="background:var(--d-core)"></i></span>dots = the slot's other tracks</span>`;
+
 function totals(){
   const by = {};
   SESSIONS.forEach(s=>{
@@ -232,15 +254,16 @@ function renderTimeline(){
   const el = document.getElementById("timeline");
   let html = `<div></div><div class="axis">` + Array.from({length:9},(_,i)=>{
     const m=T0+i*60; return `<span style="left:${(m-T0)/SPAN*100}%">${clock(String(Math.floor(m/60)).padStart(2,"0")+":00")}</span>`; }).join("") + `</div>`;
-  STAGES.forEach(([code,name,color])=>{
+  STAGES.forEach(([code,name])=>{
     const list = SESSIONS.filter(s=>s.day===state.day && s.stage===code);
-    html += `<div class="stage-label"><span class="swatch" style="background:var(${color})"></span>${esc(name)}</div><div class="lane${list.length?"":" empty"}">`;
+    html += `<div class="stage-label">${esc(name)}</div><div class="lane${list.length?"":" empty"}">`;
     list.forEach(s=>{
       const left=(mins(s.start)-T0)/SPAN*100, w=dur(s)/SPAN*100;
       const dim = (state.emcee && s.emcee!==state.emcee) || !matchesTrack(s);
       const sel = state.sessionId===s.id || (state.emcee && s.emcee===state.emcee && state.sessionId==null);
-      html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.kind==='clash'?" clash":""}${dim?" dim":""}${sel?" sel":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(${color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
-        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
+      const dots = s.extra.length ? `<span class="dots" aria-hidden="true">${s.extra.map(k=>`<i style="background:var(--d-${k})"></i>`).join("")}</span>` : "";
+      html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.color==="comm"?" comm":""}${s.kind==='clash'?" clash":""}${s.kind==='clash'||s.flag?" marked":""}${dim?" dim":""}${sel?" sel":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(--t-${s.color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
+        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${dots}${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
     });
     html += `</div>`;
   });
@@ -279,7 +302,7 @@ function renderDetail(){
       const call = clock(String(Math.floor((mins(s.start)-30)/60)).padStart(2,"0")+":"+String((mins(s.start)-30)%60).padStart(2,"0"));
       const talks = s.talks?.length ? s.talks.map(t=>`${esc(t.start?clock(t.start)+" ":"")}${esc(t.title)}${t.speaker?" — "+esc(t.speaker):""}`).join("<br>") : "Speakers and talks: not added yet";
       return `<li><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
-        <span class="st"><span class="swatch" style="background:var(${STAGE[s.stage].color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
+        <span class="st"><span class="swatch" style="background:var(--d-${s.color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
         <span class="tr">${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
         ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}">${esc(s.flag)}</span>`:""}
         <span class="talks">${talks}</span></li>`;}).join("")}</ul>`;
