@@ -14,19 +14,20 @@ body{margin:0}
 img{max-width:100%}
 /* Layout: day tabs → stage-by-time timeline (stages as rows, 10am–6:30pm across) → emcee hours board beside a detail/notes column */
 :root{
-  --bg:#f5f5fa; --surface:#ffffff; --ink:#1c1a33; --muted:#5d5a78; --line:#dddbe9; --accent:#d9480f; --accent-soft:#fde8dd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
-  /* stage tints echo the colours of the printed MC sheet */
-  --s-main:#f3c9cf; --s-l1:#fbe0c8; --s-l2:#fbefc4; --s-l3:#d6ecd0; --s-j4:#cfdcf7; --s-lt:#e1d8f0; --s-w1:#f2d3df; --s-w2:#eed5e6; --s-ink:#1c1a33;
+  /* colours follow devcon.org: lavender page, deep purple-navy text, Devcon purple buttons */
+  --bg:#ecf1ff; --surface:#ffffff; --ink:#170b2d; --muted:#574f73; --line:#d8dcf3; --accent:#7234ed; --on-accent:#ffffff; --accent-soft:#ece3fd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
+  /* stage tints are soft versions of the Devcon 8 track badge colours */
+  --s-main:#ecd3f5; --s-l1:#ffdcbf; --s-l2:#f3e2c9; --s-l3:#c4f3e7; --s-j4:#d1dfef; --s-lt:#ddd6f2; --s-w1:#ffd5e1; --s-w2:#d5d9f8; --s-ink:#170b2d;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}}
+  --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}
+  --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
 .wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 .panel,.side{min-width:0}
@@ -114,7 +115,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .me p{margin:0;max-width:60ch}
 .me .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{font:inherit;font-size:14px;font-weight:600;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn:disabled{opacity:.5;cursor:default}
 .linkish{font:inherit;font-size:13px;border:0;background:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px}
 .ok{color:var(--ink)} .ok b{color:var(--accent)}
