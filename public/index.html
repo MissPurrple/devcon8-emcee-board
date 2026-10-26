@@ -14,19 +14,23 @@ body{margin:0}
 img{max-width:100%}
 /* Layout: day tabs → stage-by-time timeline (stages as rows, 10am–6:30pm across) → emcee hours board beside a detail/notes column */
 :root{
-  --bg:#f5f5fa; --surface:#ffffff; --ink:#1c1a33; --muted:#5d5a78; --line:#dddbe9; --accent:#d9480f; --accent-soft:#fde8dd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
-  /* stage tints echo the colours of the printed MC sheet */
-  --s-main:#f3c9cf; --s-l1:#fbe0c8; --s-l2:#fbefc4; --s-l3:#d6ecd0; --s-j4:#cfdcf7; --s-lt:#e1d8f0; --s-w1:#f2d3df; --s-w2:#eed5e6; --s-ink:#1c1a33;
+  /* colours follow devcon.org: lavender page, deep purple-navy text, Devcon purple buttons */
+  --bg:#ecf1ff; --surface:#ffffff; --ink:#170b2d; --muted:#574f73; --line:#d8dcf3; --accent:#7234ed; --on-accent:#ffffff; --accent-soft:#ece3fd; --warn:#a15c00; --warn-soft:#fff1d6; --clash:#c92a2a; --clash-soft:#ffe3e3;
+  /* stage tints are soft versions of the Devcon 8 track badge colours */
+  --s-main:#ecd3f5; --s-l1:#ffdcbf; --s-l2:#f3e2c9; --s-l3:#c4f3e7; --s-j4:#d1dfef; --s-lt:#ddd6f2; --s-w1:#ffd5e1; --s-w2:#d5d9f8; --s-ink:#170b2d;
+  /* track dots use the main colour of each Devcon 8 track badge */
+  --d-core:#9c44ac; --d-crypt:#2c547c; --d-sec:#d4b48c; --d-priv:#bcb4c4; --d-rights:#4c3c74; --d-users:#fca4bc; --d-futures:#fc841c; --d-open:#24e4c4; --d-perm:#545cc4;
+  --dot-pill:#ecf1ff; --dot-ring:#170b2d; /* dots sit on a Devcon-lavender pill in both themes so dark badge colours stay visible */
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}}
+  --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#131221; --surface:#1d1b30; --ink:#eceaf7; --muted:#a6a3c2; --line:#34314d; --accent:#ff8a4c; --accent-soft:#3d2418; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
-  --s-main:#6b3a44; --s-l1:#6a4a2c; --s-l2:#5f5326; --s-l3:#355337; --s-j4:#2f4167; --s-lt:#47395f; --s-w1:#5f3448; --s-w2:#56384f; --s-ink:#f4f2ff; color-scheme:dark}
+  --bg:#140a29; --surface:#1f1440; --ink:#efeafc; --muted:#aea6cf; --line:#3a2d63; --accent:#a07cff; --on-accent:#140a29; --accent-soft:#33215f; --warn:#ffc266; --warn-soft:#3a2c12; --clash:#ff6b6b; --clash-soft:#3f1d1f;
+  --s-main:#5b2d6c; --s-l1:#6e3e1a; --s-l2:#5e4a2a; --s-l3:#1d5a4f; --s-j4:#28456a; --s-lt:#43376e; --s-w1:#6c2f48; --s-w2:#30357c; --s-ink:#f4f2ff; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
 .wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 .panel,.side{min-width:0}
@@ -55,7 +59,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .axis span{position:absolute;transform:translateX(-50%);top:2px;font-variant-numeric:tabular-nums}
 .stage-label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;padding-right:8px}
 .swatch{width:10px;height:10px;border-radius:3px;flex:none}
-.lane{position:relative;height:74px;border-radius:8px;background:repeating-linear-gradient(90deg,transparent 0 calc(100%/8.5 - 1px),var(--line) calc(100%/8.5 - 1px) calc(100%/8.5))}
+.lane{position:relative;height:92px;border-radius:8px;background:repeating-linear-gradient(90deg,transparent 0 calc(100%/8.5 - 1px),var(--line) calc(100%/8.5 - 1px) calc(100%/8.5))}
 .lane.empty::after{content:"No sessions listed";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-style:italic}
 .blk{position:absolute;top:3px;bottom:3px;border-radius:7px;border:0;padding:5px 7px;text-align:left;font:inherit;color:var(--s-ink);cursor:pointer;overflow:hidden;display:flex;flex-direction:column;gap:1px;transition:opacity .15s, box-shadow .15s}
 .blk .t{font-family:var(--mono);font-size:10.5px;opacity:.8;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -63,6 +67,12 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .blk .k{font-size:11px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .blk.tbc .e{font-style:italic;opacity:.75}
 .blk.dim{opacity:.22}
+.dots{display:inline-flex;gap:5px;padding:3px 6px;border-radius:999px;background:var(--dot-pill);flex:none}
+.dots i{width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 1.5px var(--dot-ring)}
+.dots i.none{background:transparent}
+.blk .dots{margin-top:auto;align-self:flex-start}
+.tkey{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.tkey span{display:inline-flex;align-items:center;gap:6px}
 .blk.sel{box-shadow:0 0 0 2px var(--accent)}
 .blk .flag{position:absolute;top:4px;right:5px;width:16px;height:16px;border-radius:50%;background:var(--warn);color:var(--surface);font-size:11px;font-weight:700;display:grid;place-items:center}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
@@ -102,6 +112,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .slist .d{font-family:var(--mono);font-size:12px;color:var(--muted);grid-row:span 2;font-variant-numeric:tabular-nums;line-height:1.4}
 .slist .st{font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center}
 .slist .tr{font-size:13px;color:var(--muted)}
+.slist .tr .dots{margin-right:6px;vertical-align:-2px}
 .slist .fl.clash{color:var(--clash);background:var(--clash-soft)}
 .slist .fl{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px}
 .slist .talks{grid-column:1/-1;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
@@ -114,7 +125,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .me p{margin:0;max-width:60ch}
 .me .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{font:inherit;font-size:14px;font-weight:600;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn:disabled{opacity:.5;cursor:default}
 .linkish{font:inherit;font-size:13px;border:0;background:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px}
 .ok{color:var(--ink)} .ok b{color:var(--accent)}
@@ -148,6 +159,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
     </div>
     <div class="timeline-scroll"><div class="timeline" id="timeline"></div></div>
     <div class="legend"><span><svg class="tri" viewBox="0 0 16 14" aria-hidden="true"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg> Double-booked: same emcee in two places at once</span><span><i>!</i>Needs checking (tap the slot to see why)</span><span><em>TBC</em> = no emcee named yet</span><span>Scroll sideways on a phone</span></div>
+    <div class="tkey" id="tkey"></div>
   </section>
 
   <div class="cols">
@@ -211,6 +223,16 @@ const trackSel = document.getElementById("track");
 TRACKS.forEach(([n])=>trackSel.insertAdjacentHTML("beforeend",`<option value="${esc(n)}">${esc(n)}</option>`));
 const matchesTrack = s => !state.track || TRACKS.find(t=>t[0]===state.track)[1].test(s.tracks);
 
+// One dot per track on each slot, in the Devcon 8 track badge colours. Community-led / Hubs / ceremony
+// slots have no badge, so they get a hollow ring.
+const TRACK_COLOR = {"Core Protocol":"core","Applied Cryptography":"crypt","Security":"sec","Privacy & Consent":"priv","Rights, Freedom, Govt":"rights",
+  "Users, Builders, Agents":"users","Futures worth building":"futures","Open & Verifiable Stack":"open","Permissionless":"perm"};
+SESSIONS.forEach(s=>{ s.dots = [...new Set(s.trackList.map(p=>TRACK_COLOR[TRACKS.find(t=>t[1].test(p))?.[0]]).filter(Boolean))]; });
+const dotsHtml = s => `<span class="dots" aria-hidden="true">${s.dots.length ? s.dots.map(k=>`<i style="background:var(--d-${k})"></i>`).join("") : `<i class="none"></i>`}</span>`;
+document.getElementById("tkey").innerHTML = `<span>Dots = tracks:</span>` +
+  Object.entries(TRACK_COLOR).map(([n,k])=>`<span>${dotsHtml({dots:[k]})}${esc(n)}</span>`).join("") +
+  `<span>${dotsHtml({dots:[]})}Community-led, Hubs, ceremony</span>`;
+
 function totals(){
   const by = {};
   SESSIONS.forEach(s=>{
@@ -239,7 +261,7 @@ function renderTimeline(){
       const dim = (state.emcee && s.emcee!==state.emcee) || !matchesTrack(s);
       const sel = state.sessionId===s.id || (state.emcee && s.emcee===state.emcee && state.sessionId==null);
       html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.kind==='clash'?" clash":""}${dim?" dim":""}${sel?" sel":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(${color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
-        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
+        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${dotsHtml(s)}${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
     });
     html += `</div>`;
   });
@@ -279,7 +301,7 @@ function renderDetail(){
       const talks = s.talks?.length ? s.talks.map(t=>`${esc(t.start?clock(t.start)+" ":"")}${esc(t.title)}${t.speaker?" — "+esc(t.speaker):""}`).join("<br>") : "Speakers and talks: not added yet";
       return `<li><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
         <span class="st"><span class="swatch" style="background:var(${STAGE[s.stage].color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
-        <span class="tr">${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
+        <span class="tr">${dotsHtml(s)}${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
         ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}">${esc(s.flag)}</span>`:""}
         <span class="talks">${talks}</span></li>`;}).join("")}</ul>`;
 }
