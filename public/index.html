@@ -315,7 +315,13 @@ document.addEventListener("click",e=>{
     if(state.emcee && !SESSIONS.some(s=>s.emcee===n&&s.day===state.day)) state.day = SESSIONS.find(s=>s.emcee===n).day;
     render(); if(state.emcee && window.innerWidth<860) document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"start"}); return; }
   if(e.target.id==="clear"){ state.emcee=null; state.sessionId=null; state.track=""; trackSel.value=""; return render(); }
+  // Clicking anywhere else clears the selected emcee (the track filter stays). Clicks inside the detail panel,
+  // the login box, controls and links don't count, and neither does dragging to select text.
+  if(!state.emcee || e.target.closest("#detail, #me, .filters, .toggle, a, button, select, input, label")) return;
+  if(String(window.getSelection?.() ?? "")) return;
+  state.emcee=null; state.sessionId=null; render();
 });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && state.emcee){ state.emcee=null; state.sessionId=null; render(); } });
 trackSel.addEventListener("change",()=>{ state.track=trackSel.value; renderTimeline(); });
 const callBox=document.getElementById("calltime"); callBox.checked=state.call;
 callBox.addEventListener("change",()=>{ state.call=callBox.checked; try{localStorage.setItem("dc8-call",state.call?"1":"0")}catch(_){} renderBoard(); });
