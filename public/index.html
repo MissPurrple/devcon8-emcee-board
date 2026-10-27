@@ -114,13 +114,19 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .slist .tr{font-size:13px;color:var(--muted)}
 .slist .tr .dots{margin-right:6px;vertical-align:-2px}
 .slist .fl.clash{color:var(--clash);background:var(--clash-soft)}
-.slist .fl{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px}
+.slist .fl{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}
+.slist .fl .back{font:inherit;font-size:12.5px;font-weight:600;border:0;background:none;color:inherit;cursor:pointer;text-decoration:underline;padding:2px 0;white-space:nowrap}
+.slist li{scroll-margin:16px}
+.slist li.flash{animation:flash 2.4s ease-out}
+@keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--warn)}100%{box-shadow:0 0 0 3px transparent}}
+.slist li.flash.clash{animation-name:flash-clash}
+@keyframes flash-clash{0%,40%{box-shadow:0 0 0 3px var(--clash)}100%{box-shadow:0 0 0 3px transparent}}
 .slist .talks{grid-column:1/-1;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
 .hint{color:var(--muted);font-size:14px;margin:0}
 .notes ul{margin:8px 0 0;padding-left:18px;display:grid;gap:8px;font-size:14px}
 .notes li b{font-weight:600}
 .sig{border-top:1px solid var(--line);padding-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .me{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
 .me p{margin:0;max-width:60ch}
 .me .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -299,18 +305,23 @@ function renderDetail(){
     <ul class="slist">${list.map(s=>{
       const call = clock(String(Math.floor((mins(s.start)-30)/60)).padStart(2,"0")+":"+String((mins(s.start)-30)%60).padStart(2,"0"));
       const talks = s.talks?.length ? s.talks.map(t=>`${esc(t.start?clock(t.start)+" ":"")}${esc(t.title)}${t.speaker?" — "+esc(t.speaker):""}`).join("<br>") : "Speakers and talks: not added yet";
-      return `<li><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
+      return `<li data-id="${s.id}"${s.kind==='clash'?' class="clash"':''}><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
         <span class="st"><span class="swatch" style="background:var(${STAGE[s.stage].color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
         <span class="tr">${dotsHtml(s)}${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
-        ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}">${esc(s.flag)}</span>`:""}
+        ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}"><span>${esc(s.flag)}</span><button class="back" data-back="${s.id}">↑ Back to timeline</button></span>`:""}
         <span class="talks">${talks}</span></li>`;}).join("")}</ul>`;
 }
 
+const smooth = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 function render(){ renderTabs(); renderTimeline(); renderBoard(); renderDetail(); }
 
 document.addEventListener("click",e=>{
   const tab=e.target.closest(".tab"); if(tab){ state.day=+tab.dataset.day; state.sessionId=null; try{localStorage.setItem("dc8-day",state.day)}catch(_){} return render(); }
-  const blk=e.target.closest(".blk"); if(blk){ const s=SESSIONS[+blk.dataset.id]; state.emcee=s.emcee; state.sessionId=s.id; return render(); }
+  const blk=e.target.closest(".blk"); if(blk){ const s=SESSIONS[+blk.dataset.id]; state.emcee=s.emcee; state.sessionId=s.id; render();
+    // A slot with a ! or double-booking marker: jump to its explanation in the emcee panel and make it glow briefly
+    if(s.flag){ const li=document.querySelector(`#detail li[data-id="${s.id}"]`); li.scrollIntoView({behavior:smooth(),block:"center"}); li.classList.add("flash"); }
+    return; }
+  const back=e.target.closest("[data-back]"); if(back){ document.querySelector(`.blk[data-id="${back.dataset.back}"]`)?.scrollIntoView({behavior:smooth(),block:"center"}); return; }
   const row=e.target.closest(".row"); if(row){ const n=row.dataset.emcee; state.emcee = state.emcee===n?null:n; state.sessionId=null;
     if(state.emcee && !SESSIONS.some(s=>s.emcee===n&&s.day===state.day)) state.day = SESSIONS.find(s=>s.emcee===n).day;
     render(); if(state.emcee && window.innerWidth<860) document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"start"}); return; }
