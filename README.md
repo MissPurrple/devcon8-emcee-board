@@ -202,7 +202,7 @@ Or send the Passport details to Claude and ask for the file to be updated.
 
 - **Times** are Mumbai time (IST). Reminders count from the slot start time on the MC sheet; the Devcon Passport has exact session timings.
 - **Anyone can tap any name.** The only effect is that they'd also receive that person's reminders; nobody can change the schedule from the bot or the site. Several people can pick the same name.
-- **Clashes:** Alessandro's two Day 4 morning slots are both on the sheet, so his reminders include a warning about the clash.
+- **Clashes:** if the sheet ever double-books someone, mark both slots with `"kind": "clash"` and a `"flag"` note; their reminders then include the warning. The 2 Nov 2026 sheet has no clashes.
 - **What's stored:** each person's Telegram ID, first name, username and chosen emcee name, in your Upstash database. Nothing else.
 - **Vercel's free plan** is meant for personal, non-commercial projects. If this runs on behalf of an organisation, check Vercel's terms or use Pro.
 - **Checks:** `npm test` runs 25 automated checks (login security, every bot command, and reminders across the whole event) using fake Telegram and storage. You don't need to run them to deploy.

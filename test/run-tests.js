@@ -13,6 +13,7 @@ const { useStoreForTests, getEmcee } = await import("../lib/store.js");
 const { useTelegramForTests } = await import("../lib/telegram.js");
 const sched = await import("../lib/schedule.js");
 const { runReminders, activate } = await import("../lib/reminders.js");
+const { scheduleMessage } = await import("../lib/messages.js");
 const { verifyTelegramLogin, webhookSecret } = await import("../lib/security.js");
 const telegramHook = (await import("../api/telegram.js")).default;
 const cron = (await import("../api/cron.js")).default;
@@ -67,18 +68,25 @@ await test("venue time converts to the right real moment (10am IST on 3 Nov = 04
   assert.equal(new Date(IST(1, "10:00")).toISOString(), "2026-11-03T04:30:00.000Z");
   assert.equal(new Date(IST(4, "13:30")).toISOString(), "2026-11-06T08:00:00.000Z");
 });
-await test("schedule has 64 slots, 29 named emcees, matching totals", () => {
-  assert.equal(sched.SESSIONS.length, 64);
-  assert.equal(sched.EMCEES.length, 29);
+await test("schedule has 65 slots, 31 named emcees, matching totals", () => {
+  assert.equal(sched.SESSIONS.length, 65);
+  assert.equal(sched.EMCEES.length, 31);
   assert.equal(sched.totalMinutes("Miss Purple"), 390);
-  assert.equal(sched.totalMinutes("Alessandro Malventano"), 480);
-  assert.equal(sched.totalMinutes("Jimin Lee"), 440);
+  assert.equal(sched.totalMinutes("Alessandro Malventano"), 285);
+  assert.equal(sched.totalMinutes("Jimin Lee"), 470);
+  assert.equal(sched.totalMinutes("Ross"), 475);
   assert.ok(!sched.EMCEES.includes("TBC"));
-  assert.equal(new Set(sched.SESSIONS.map((s) => s.id)).size, 64, "ids are unique");
+  assert.ok(!sched.EMCEES.includes("DEVCON TEAM"), "placeholders can't be picked");
+  assert.equal(new Set(sched.SESSIONS.map((s) => s.id)).size, 65, "ids are unique");
+  assert.equal(sched.SESSIONS.reduce((n, s) => n + (s.talks || []).length, 0), 296, "talks from the official schedule");
+  for (const s of sched.SESSIONS) for (const t of s.talks || []) if (s.id !== 1) assert.ok(t.start >= s.start && t.end <= s.end, `talk inside slot #${s.id}`); // #1: ceremony starts 9:30 officially
+  // Telegram refuses messages over 4096 characters, so every emcee's full list must fit in one message
+  const visible = (h) => h.replace(/<[^>]+>/g, "").replace(/&lt;|&gt;|&amp;/g, "x").length;
+  for (const n of sched.EMCEES) assert.ok(visible(scheduleMessage(n, IST(1, "05:00"))) <= 4096, `${n}'s list fits in one message`);
 });
 await test("GET /api/schedule returns all slots", async () => {
   const res = mockRes(); schedule(req({}), res);
-  assert.equal(res.body.sessions.length, 64);
+  assert.equal(res.body.sessions.length, 65);
 });
 
 // ---- login verification --------------------------------------------------
@@ -110,7 +118,7 @@ await test("/start shows a button for every emcee", async () => {
   await telegramHook(hookReq(msg(7, "/start")), mockRes());
   const m = sent(7)[0];
   const buttons = m.params.reply_markup.inline_keyboard.flat();
-  assert.equal(buttons.length, 29);
+  assert.equal(buttons.length, 31);
   assert.ok(buttons.every((b) => Buffer.byteLength(b.callback_data) <= 64));
 });
 await test("tapping a name links it and sends the full list of slots", async () => {
@@ -129,7 +137,7 @@ await test("a forged button with a name not on the schedule is refused", async (
   assert.equal(sent(8).length, 0);
 });
 await test("/myshifts, /next, /test and /stop work after linking", async () => {
-  await activate(9, "Dmitrii Gusakov", IST(1, "08:00"));
+  await activate(9, "Dima Gusakov", IST(1, "08:00"));
   calls = [];
   for (const c of ["/myshifts", "/next", "/test", "/stop"]) await telegramHook(hookReq(msg(9, c)), mockRes());
   const texts = sent(9).map((m) => m.params.text);
@@ -148,7 +156,7 @@ async function simulateEvent(people, from = IST(1, "06:00"), to = IST(4, "20:00"
   for (let t = from; t <= to; t += stepMin * MIN) await runReminders(t);
 }
 await test("every slot gets exactly one 2-hour and one 1-hour reminder (timer every 5 min, whole event)", async () => {
-  const people = { 101: "Miss Purple", 102: "Alessandro Malventano", 103: "Dmitrii Gusakov", 104: "Esha Datanwala" };
+  const people = { 101: "Miss Purple", 102: "Alessandro Malventano", 103: "Dima Gusakov", 104: "Esha Datanwala" };
   for (const [id, n] of Object.entries(people)) await activate(Number(id), n, IST(1, "05:00"));
   calls = [];
   // capture when each reminder was sent
@@ -183,34 +191,35 @@ await test("reminder text has stage, day, times, topic and call time", async () 
   assert.match(t, /Topic:<\/b> Applied Cryptography, Users Builders Agents/);
   assert.match(t, /Be at the stage by:<\/b> 2:30pm/);
 });
-await test("double-booked slot reminder carries the clash warning", async () => {
-  await activate(202, "Alessandro Malventano", IST(4, "07:00"));
-  calls = [];
-  await runReminders(IST(4, "08:30"));
+await test("someone linked under an old spelling (BINJI) still gets reminders under the new one", async () => {
+  const store = fakeRedis(); useStoreForTests(store);
+  store.kv.set("emcee:202", "BINJI"); store.sets.set("subscribers", new Set(["202"]));
+  assert.equal(await getEmcee(202), "Binji");
+  await runReminders(IST(1, "12:00")); // 2h before Binji's 2pm Lotus 2 slot
   const texts = sent(202).map((m) => m.params.text);
-  assert.equal(texts.length, 2, "one for each clashing slot");
-  assert.ok(texts.every((t) => /⚠️ Clash/.test(t)));
+  assert.equal(texts.length, 1);
+  assert.match(texts[0], /Stage:<\/b> Lotus Stage 2/);
 });
 await test("running the timer twice at the same moment sends nothing twice", async () => {
   await activate(203, "YQ", IST(1, "06:00"));
   calls = [];
-  await runReminders(IST(1, "10:20")); await runReminders(IST(1, "10:20")); await runReminders(IST(1, "10:21"));
+  await runReminders(IST(1, "10:40")); await runReminders(IST(1, "10:40")); await runReminders(IST(1, "10:41")); // YQ 12:35
   assert.equal(sent(203).length, 1);
 });
 await test("late sign-up 90 min before a slot: list now, no 2h reminder, then the 1h reminder", async () => {
   calls = [];
-  await activate(204, "BINJI", IST(1, "08:30")); // opening ceremony 10:00
+  await activate(204, "YQ", IST(1, "11:05")); // Lightning Stage 12:35
   assert.equal(sent(204).length, 1, "activation list sent");
   calls = [];
-  await simulateEvent(null, IST(1, "08:30"), IST(1, "10:30"));
+  await simulateEvent(null, IST(1, "11:05"), IST(1, "13:05"));
   const texts = sent(204).map((m) => m.params.text);
   assert.equal(texts.length, 1);
   assert.match(texts[0], /about 1 hour/);
 });
 await test("sign-up 30 min before a slot: no reminders for that slot", async () => {
-  await activate(205, "BINJI", IST(1, "09:30"));
+  await activate(205, "YQ", IST(1, "12:05"));
   calls = [];
-  await simulateEvent(null, IST(1, "09:30"), IST(1, "10:30"));
+  await simulateEvent(null, IST(1, "12:05"), IST(1, "13:05"));
   assert.equal(sent(205).length, 0);
 });
 await test("after /stop, no more reminders", async () => {
@@ -225,7 +234,7 @@ await test("someone who blocked the bot doesn't stop reminders for everyone else
   await activate(208, "Kirk Baird", IST(1, "06:00"));
   blocked.add(207);
   calls = [];
-  const s = await runReminders(IST(2, "11:00"));
+  const s = await runReminders(IST(2, "11:35")); // 2h window for Kirk's 1:30pm slot
   blocked.delete(207);
   assert.equal(s.undeliverable, 1); assert.equal(sent(208).length, 1);
 });
@@ -264,7 +273,7 @@ await test("lock: after locking, /change, /stop and other names are refused unti
   await telegramHook(hookReq(tap(400, "unlock")), mockRes());
   assert.match(sent(400).at(-1).params.text, /Unlocked/);
   await telegramHook(hookReq(msg(400, "/change")), mockRes());
-  assert.equal(sent(400).at(-1).params.reply_markup.inline_keyboard.flat().length, 29, "name picker shown again");
+  assert.equal(sent(400).at(-1).params.reply_markup.inline_keyboard.flat().length, 31, "name picker shown again");
   await telegramHook(hookReq(tap(400, "p:Ross")), mockRes());
   assert.equal(await getEmcee(400), "Ross");
 });
@@ -312,7 +321,7 @@ await test("website: log in, pick name, get list in Telegram, see it on the site
   assert.match(r.headers["set-cookie"], /HttpOnly; Secure/);
 
   r = mockRes(); await account(req({ headers: { cookie } }), r);
-  assert.equal(r.body.user.id, 300); assert.equal(r.body.emcee, null); assert.equal(r.body.emcees.length, 29);
+  assert.equal(r.body.user.id, 300); assert.equal(r.body.emcee, null); assert.equal(r.body.emcees.length, 31);
 
   r = mockRes(); await account(req({ method: "POST", headers: { cookie }, body: { action: "link", emcee: "TBC" } }), r);
   assert.equal(r.statusCode, 400, "TBC can't be claimed");
