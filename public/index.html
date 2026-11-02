@@ -198,7 +198,7 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 <script type="module">
 const SESSIONS = (await fetch("/api/schedule").then(r=>r.json())).sessions;
 const TRI = `<svg class="tri" viewBox="0 0 16 14" role="img" aria-label="double-booked"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg>`;
-// Placeholder for speakers/talks: once the Devcon Passport is live, add a `talks` array to any session above,
+// Speakers/talks come from each session's `talks` array (filled by `npm run sync-talks` from the official Devcon schedule),
 // e.g. {"title":"…","speaker":"…","start":"10:15","end":"10:35"}. They will show in the detail panel automatically.
 
 const DAYS = {1:{name:"Tue",date:"3 Nov"},2:{name:"Wed",date:"4 Nov"},3:{name:"Thu",date:"5 Nov"},4:{name:"Fri",date:"6 Nov"}};

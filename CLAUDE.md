@@ -36,6 +36,7 @@ The owner (Miss Purple, an emcee and organiser at Devcon 8) is **new to coding a
 | `api/telegram.js` | Bot webhook (commands: /start /myshifts /next /test /change /stop /lock /unlock). |
 | `api/cron.js` | Sends due reminders. Needs `?key=ADMIN_SECRET` or `Authorization: Bearer <ADMIN_SECRET or CRON_SECRET>`. |
 | `api/setup.js` | Admin page: checks settings, connects the bot webhook, sets bot commands. `?key=ADMIN_SECRET`. Safe to rerun. |
+| `scripts/sync-talks.js` | `npm run sync-talks` refreshes every slot's `talks` from the official schedule (api.devcon.org, event `devcon8`) and reports talks outside emcee slots. `-- --dry` = report only. |
 | `test/run-tests.js` | 25 checks with fake Telegram + storage. `npm test`. |
 | `README.md` | The same setup as a manual, click-by-click guide (no Claude Code). |
 
@@ -138,8 +139,9 @@ Give them, in plain words: the site link, the bot link `https://t.me/<username>`
 
 ## Routine tasks
 
-**Update the schedule or add speakers** (e.g. from the Devcon Passport once live):
-- Edit `lib/sessions-data.js` only. Talks go on a slot as:
+**Update the schedule or add speakers:**
+- Talks/speakers: run `npm run sync-talks` (re-downloads app.devcon.org's schedule and rewrites the `talks` arrays only). Read its report, update the expected talk count in the test if it changed, `npm test`, deploy. Rooms not on the MC sheet (Community Led Stage, CLS Builders Room, Music stage) are skipped.
+- Emcee/slot changes: edit `lib/sessions-data.js` only. Talks go on a slot as:
   `"talks": [{"title": "…", "speaker": "…", "start": "14:35", "end": "14:55"}]`
 - Talks appear automatically in bot messages, reminders, and the website's per-emcee panel (which shows "Speakers and talks: not added yet" until a slot has talks).
 - If slots change, re-verify totals against the source, run `npm test` (update the expected counts/totals in the test if the schedule legitimately changed, and say so), deploy, and summarise the changes for the owner.

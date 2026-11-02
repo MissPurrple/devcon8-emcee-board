@@ -13,6 +13,7 @@ const { useStoreForTests, getEmcee } = await import("../lib/store.js");
 const { useTelegramForTests } = await import("../lib/telegram.js");
 const sched = await import("../lib/schedule.js");
 const { runReminders, activate } = await import("../lib/reminders.js");
+const { scheduleMessage } = await import("../lib/messages.js");
 const { verifyTelegramLogin, webhookSecret } = await import("../lib/security.js");
 const telegramHook = (await import("../api/telegram.js")).default;
 const cron = (await import("../api/cron.js")).default;
@@ -77,6 +78,11 @@ await test("schedule has 65 slots, 31 named emcees, matching totals", () => {
   assert.ok(!sched.EMCEES.includes("TBC"));
   assert.ok(!sched.EMCEES.includes("DEVCON TEAM"), "placeholders can't be picked");
   assert.equal(new Set(sched.SESSIONS.map((s) => s.id)).size, 65, "ids are unique");
+  assert.equal(sched.SESSIONS.reduce((n, s) => n + (s.talks || []).length, 0), 296, "talks from the official schedule");
+  for (const s of sched.SESSIONS) for (const t of s.talks || []) if (s.id !== 1) assert.ok(t.start >= s.start && t.end <= s.end, `talk inside slot #${s.id}`); // #1: ceremony starts 9:30 officially
+  // Telegram refuses messages over 4096 characters, so every emcee's full list must fit in one message
+  const visible = (h) => h.replace(/<[^>]+>/g, "").replace(/&lt;|&gt;|&amp;/g, "x").length;
+  for (const n of sched.EMCEES) assert.ok(visible(scheduleMessage(n, IST(1, "05:00"))) <= 4096, `${n}'s list fits in one message`);
 });
 await test("GET /api/schedule returns all slots", async () => {
   const res = mockRes(); schedule(req({}), res);
