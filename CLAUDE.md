@@ -23,7 +23,7 @@ The owner (Miss Purple, an emcee and organiser at Devcon 8) is **new to coding a
 
 | Path | Purpose |
 |---|---|
-| `lib/sessions-data.js` | **The schedule.** 64 slots, one per line. The only file to edit for schedule/speaker changes. |
+| `lib/sessions-data.js` | **The schedule.** 65 slots (ids 1–65), one per line. The only file to edit for schedule/speaker changes. |
 | `lib/schedule.js` | Time helpers. Venue time is Mumbai, IST = UTC+05:30. Day 1 = Tue 3 Nov 2026. |
 | `lib/messages.js` | Wording of every bot message. |
 | `lib/reminders.js` | Reminder timing. 2h reminder when 60 < minutes left ≤ 120; 1h when 0 < left ≤ 60. `activate()` pre-marks windows already open so late sign-ups aren't spammed. |
@@ -57,7 +57,7 @@ The owner (Miss Purple, an emcee and organiser at Devcon 8) is **new to coding a
 3. **Never change or reuse an `id` in `lib/sessions-data.js`.** Sent reminders are remembered by id. New slots get the next unused number.
 4. Times in the data are 24-hour, 5 characters (`09:30`), Mumbai local time. `stage` codes: `Main L1 L2 L3 J4 LT W1 W2`. Emcee names must be spelled identically across their slots.
 5. Keep the footer signature on the site: `vibe build: miss purple · original source: ross`.
-6. Keep the visual markers: orange **!** = needs checking (Day 3 workshop names were printed grey in the source PDF); red triangle = double booking (Alessandro, Day 4, Lotus 1 and Workshop 2, 10am–1pm). The Day 1 "name listed twice" is **not** an issue: those are single 2pm–5:30pm slots.
+6. Keep the visual markers: orange **!** = needs checking (Day 3 workshop names were printed grey in the source PDF); red triangle = double booking (set a slot's `"kind": "clash"` + `"flag"`; none in the 2 Nov 2026 sheet — the old Alessandro Day 4 clash is resolved). The Day 1 "name listed twice" (Miss Purple Lotus 1, Jork Lotus 3) is **not** an issue: those are single 2pm–5:30pm slots. `DEVCON TEAM` (Opening Ceremony) is a placeholder like `TBC`, not a pickable name. If an emcee's spelling changes, add old → new to `RENAMED` in `lib/schedule.js` so already-linked people keep their reminders.
 7. Settings changes need a redeploy: `vercel deploy --prod`.
 8. Don't create accounts, accept terms, or log in on the owner's behalf. Those are their steps.
 9. Don't commit `.secrets/`, `.env*`, `.vercel/` or `node_modules/`.
@@ -99,7 +99,7 @@ Run `vercel login`. It opens a browser; they approve. If they have no account, t
   - `vercel env add ADMIN_SECRET production < .secrets/admin-secret.txt`
 - `vercel deploy --prod`. Note the production domain (e.g. `devcon8-emcee-board.vercel.app`); use the stable project domain, not the per-deployment URL.
 - Add `SITE_URL`: write `https://<domain>` to `.secrets/site-url.txt` (no trailing newline), then `vercel env add SITE_URL production < .secrets/site-url.txt`.
-- Verify: `curl -s https://<domain>/api/schedule` has 64 `sessions`. Tell the owner the site is live and give the link.
+- Verify: `curl -s https://<domain>/api/schedule` has 65 `sessions`. Tell the owner the site is live and give the link.
 
 ### 5. Add storage (Upstash Redis)
 - `vercel integration add upstash/upstash-redis --help` to see the required fields.
