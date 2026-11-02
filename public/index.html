@@ -55,6 +55,22 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .clear{font:inherit;font-size:13px;border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:4px}
 .timeline-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .timeline{min-width:860px;display:grid;grid-template-columns:118px 1fr;row-gap:6px}
+.stage-label .short{display:none}
+/* "Fit whole day": the full 10am–6:30pm day fits the screen width, no sideways scrolling; cards show the emcee name only */
+.timeline.fit{min-width:0;grid-template-columns:58px 1fr;row-gap:4px}
+.timeline.fit .stage-label{font-size:10.5px;gap:4px;padding-right:4px;line-height:1.15}
+.timeline.fit .stage-label .long{display:none} .timeline.fit .stage-label .short{display:inline}
+.timeline.fit .swatch{width:7px;height:7px}
+.timeline.fit .axis{font-size:9px;height:16px}
+.timeline.fit .lane{height:46px;border-radius:5px}
+.timeline.fit .blk{top:2px;bottom:2px;padding:3px;border-radius:4px}
+.timeline.fit .blk .t,.timeline.fit .blk .k,.timeline.fit .blk .dots{display:none}
+.timeline.fit .blk .e{font-size:9.5px;white-space:normal;overflow-wrap:normal;line-height:1.15;text-overflow:clip}
+.blk .e .first{display:none}
+.timeline.fit .blk.narrow .e .full{display:none} .timeline.fit .blk.narrow .e .first{display:inline}
+.timeline.fit .blk .flag{width:11px;height:11px;font-size:8px;top:2px;right:2px}
+.timeline.fit .blk .tri{width:11px;height:10px;top:2px;right:2px}
+.fitbtn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
 .axis{position:relative;height:22px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 .axis span{position:absolute;transform:translateX(-50%);top:2px;font-variant-numeric:tabular-nums}
 .stage-label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;padding-right:8px}
@@ -115,13 +131,12 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
 .slist .tr .dots{margin-right:6px;vertical-align:-2px}
 .slist .fl.clash{color:var(--clash);background:var(--clash-soft)}
 .slist .fl{grid-column:1/-1;font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between}
-.slist .fl .back{font:inherit;font-size:12.5px;font-weight:600;border:0;background:none;color:inherit;cursor:pointer;text-decoration:underline;padding:2px 0;white-space:nowrap}
 .slist li{scroll-margin:16px}
 .slist li.flash{animation:flash 2.4s ease-out}
 @keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px transparent}}
 .slist li.flash.check{animation-name:flash-check}
 @keyframes flash-check{0%,40%{box-shadow:0 0 0 3px var(--warn)}100%{box-shadow:0 0 0 3px transparent}}
-.slist .totop{grid-column:1/-1;justify-self:end;font:inherit;font-size:12.5px;font-weight:600;border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:2px 0}
+.slist .tocal{grid-column:1/-1;justify-self:end;font:inherit;font-size:12.5px;font-weight:600;border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:2px 0}
 .slist li.flash.clash{animation-name:flash-clash}
 @keyframes flash-clash{0%,40%{box-shadow:0 0 0 3px var(--clash)}100%{box-shadow:0 0 0 3px transparent}}
 .slist .talks{grid-column:1/-1;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
@@ -163,11 +178,12 @@ select,input[type=search]{font:inherit;font-size:14px;color:var(--ink);backgroun
       <div class="filters">
         <label for="track" class="eyebrow">Track</label>
         <select id="track"><option value="">All tracks</option></select>
+        <button class="fitbtn" id="fit" aria-pressed="false">Fit whole day</button>
         <button class="clear" id="clear" hidden>Clear selection</button>
       </div>
     </div>
     <div class="timeline-scroll"><div class="timeline" id="timeline"></div></div>
-    <div class="legend"><span><svg class="tri" viewBox="0 0 16 14" aria-hidden="true"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg> Double-booked: same emcee in two places at once</span><span><i>!</i>Needs checking (tap the slot to see why)</span><span><em>TBC</em> = no emcee named yet</span><span>Scroll sideways on a phone</span></div>
+    <div class="legend"><span><svg class="tri" viewBox="0 0 16 14" aria-hidden="true"><path class="b" d="M8 1 15.2 13H.8Z"/><path class="m" d="M8 5.2v3.6M8 10.7v.1"/></svg> Double-booked: same emcee in two places at once</span><span><i>!</i>Needs checking (tap the slot to see why)</span><span><em>TBC</em> = no emcee named yet</span><span>On a phone, scroll sideways or tap <b>Fit whole day</b></span></div>
     <div class="tkey" id="tkey"></div>
   </section>
 
@@ -208,6 +224,7 @@ const DAYS = {1:{name:"Tue",date:"3 Nov"},2:{name:"Wed",date:"4 Nov"},3:{name:"T
 const STAGES = [
   ["Main","Main Stage (Lotus)","--s-main"],["L1","Lotus Stage 1","--s-l1"],["L2","Lotus Stage 2","--s-l2"],["L3","Lotus Stage 3","--s-l3"],
   ["J4","Jasmine Stage 4","--s-j4"],["LT","Lightning Stage","--s-lt"],["W1","Workshop 1","--s-w1"],["W2","Workshop 2","--s-w2"]];
+const SHORT = {Main:"Main",L1:"Lotus 1",L2:"Lotus 2",L3:"Lotus 3",J4:"Jasmine 4",LT:"Lightning",W1:"Wkshop 1",W2:"Wkshop 2"};
 const STAGE = Object.fromEntries(STAGES.map(s=>[s[0],{name:s[1],color:s[2]}]));
 const T0 = 10*60, T1 = 18*60+30, SPAN = T1-T0;
 
@@ -220,8 +237,8 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 
 SESSIONS.forEach((s,i)=>{ s.id=i; s.trackList=s.tracks.split(",").map(t=>t.trim()).filter(Boolean); });
 
-let state = { day:1, emcee:null, sessionId:null, track:"", call:false };
-try { const d=+localStorage.getItem("dc8-day"); if(DAYS[d]) state.day=d; state.call = localStorage.getItem("dc8-call")==="1"; } catch(e){}
+let state = { day:1, emcee:null, sessionId:null, track:"", call:false, fit:false };
+try { const d=+localStorage.getItem("dc8-day"); if(DAYS[d]) state.day=d; state.call = localStorage.getItem("dc8-call")==="1"; state.fit = localStorage.getItem("dc8-fit")==="1"; } catch(e){}
 
 // Track options: normalise the PDF's varied spellings into the official Devcon track names
 const TRACKS = [
@@ -264,17 +281,19 @@ function renderTimeline(){
     const m=T0+i*60; return `<span style="left:${(m-T0)/SPAN*100}%">${clock(String(Math.floor(m/60)).padStart(2,"0")+":00")}</span>`; }).join("") + `</div>`;
   STAGES.forEach(([code,name,color])=>{
     const list = SESSIONS.filter(s=>s.day===state.day && s.stage===code);
-    html += `<div class="stage-label"><span class="swatch" style="background:var(${color})"></span>${esc(name)}</div><div class="lane${list.length?"":" empty"}">`;
+    html += `<div class="stage-label"><span class="swatch" style="background:var(${color})"></span><span class="long">${esc(name)}</span><span class="short">${esc(SHORT[code])}</span></div><div class="lane${list.length?"":" empty"}">`;
     list.forEach(s=>{
       const left=(mins(s.start)-T0)/SPAN*100, w=dur(s)/SPAN*100;
       const dim = (state.emcee && s.emcee!==state.emcee) || !matchesTrack(s);
       const sel = state.sessionId===s.id || (state.emcee && s.emcee===state.emcee && state.sessionId==null);
-      html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.kind==='clash'?" clash":""}${dim?" dim":""}${sel?" sel":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(${color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
-        <span class="t">${range(s)}</span><span class="e">${esc(s.emcee)}</span><span class="k">${esc(s.tracks)}</span>${dotsHtml(s)}${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
+      html += `<button class="blk${s.emcee==="TBC"?" tbc":""}${s.kind==='clash'?" clash":""}${dim?" dim":""}${sel?" sel":""}${dur(s)<90?" narrow":""}" data-id="${s.id}" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:var(${color})" title="${esc(range(s)+" · "+s.emcee+" · "+s.tracks)}">
+        <span class="t">${range(s)}</span><span class="e"><span class="full">${esc(s.emcee)}</span><span class="first">${esc(s.emcee.split(" ")[0])}</span></span><span class="k">${esc(s.tracks)}</span>${dotsHtml(s)}${s.kind==='clash'?TRI:s.flag?'<span class="flag" aria-label="needs checking">!</span>':""}</button>`;
     });
     html += `</div>`;
   });
   el.innerHTML = html;
+  el.classList.toggle("fit", state.fit);
+  const fit = document.getElementById("fit"); fit.textContent = state.fit ? "Zoom in" : "Fit whole day"; fit.setAttribute("aria-pressed", state.fit);
   document.getElementById("clear").hidden = !(state.emcee || state.track);
 }
 
@@ -311,9 +330,9 @@ function renderDetail(){
       return `<li data-id="${s.id}"${s.kind?` class="${s.kind}"`:''}><span class="d">Day ${s.day}<br>${DAYS[s.day].name} ${DAYS[s.day].date}</span>
         <span class="st"><span class="swatch" style="background:var(${STAGE[s.stage].color})"></span>${esc(STAGE[s.stage].name)} · ${range(s)}</span>
         <span class="tr">${dotsHtml(s)}${esc(s.tracks)} · ${fmtH(dur(s))} · arrive ${call}</span>
-        ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}"><span>${esc(s.flag)}</span><button class="back" data-back="${s.id}">↑ Back to timeline</button></span>`:""}
+        ${s.flag?`<span class="fl${s.kind==='clash'?' clash':''}"><span>${esc(s.flag)}</span></span>`:""}
         <span class="talks">${talks}</span>
-        <button class="totop" data-top>↑ Back to top</button></li>`;}).join("")}</ul>`;
+        <button class="tocal" data-back="${s.id}">↑ Back to calendar</button></li>`;}).join("")}</ul>`;
 }
 
 const smooth = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
@@ -325,8 +344,12 @@ document.addEventListener("click",e=>{
     // Jump to this slot's details in the emcee panel and make it glow briefly (orange/red if it has a ! or clash marker)
     const li=document.querySelector(`#detail li[data-id="${s.id}"]`); li.scrollIntoView({behavior:smooth(),block:"center"}); li.classList.add("flash");
     return; }
-  if(e.target.closest("[data-top]")){ window.scrollTo({top:0,behavior:smooth()}); return; }
-  const back=e.target.closest("[data-back]"); if(back){ document.querySelector(`.blk[data-id="${back.dataset.back}"]`)?.scrollIntoView({behavior:smooth(),block:"center"}); return; }
+  // Back to calendar: return to this slot's card (switching to its day if needed), scrolled into view sideways too
+  const back=e.target.closest("[data-back]"); if(back){ const s=SESSIONS[+back.dataset.back];
+    if(state.day!==s.day){ state.day=s.day; try{localStorage.setItem("dc8-day",state.day)}catch(_){} }
+    state.sessionId=s.id; render();
+    document.querySelector(`.blk[data-id="${s.id}"]`).scrollIntoView({behavior:smooth(),block:"center",inline:"center"}); return; }
+  if(e.target.id==="fit"){ state.fit=!state.fit; try{localStorage.setItem("dc8-fit",state.fit?"1":"0")}catch(_){} return renderTimeline(); }
   const row=e.target.closest(".row"); if(row){ const n=row.dataset.emcee; state.emcee = state.emcee===n?null:n; state.sessionId=null;
     if(state.emcee && !SESSIONS.some(s=>s.emcee===n&&s.day===state.day)) state.day = SESSIONS.find(s=>s.emcee===n).day;
     render(); if(state.emcee && window.innerWidth<860) document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"start"}); return; }
